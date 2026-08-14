@@ -2,8 +2,8 @@ name: Rotate sheriff
 
 on:
   schedule:
-    # Test schedule: run every five minutes.
-    - cron: "*/5 * * * *"
+    # Run every Monday at 09:00 UTC.
+    - cron: "0 9 * * 1"
   workflow_dispatch:
 
 permissions:
@@ -34,7 +34,6 @@ jobs:
           SLACK_SOURCE_CHANNEL_ID: ${{ vars.SLACK_SOURCE_CHANNEL_ID }}
           SLACK_CHANNEL_ID: ${{ vars.SLACK_CHANNEL_ID }}
           SHERIFF_RESPONSIBILITIES_URL: ${{ vars.SHERIFF_RESPONSIBILITIES_URL }}
-          ALLOW_REPEAT_WITHIN_WEEK: "true"
           ROTATION_TIME_ZONE: ${{ vars.ROTATION_TIME_ZONE }}
           VACATION_STATUS_EMOJIS: ${{ vars.VACATION_STATUS_EMOJIS }}
           VACATION_STATUS_TEXT: ${{ vars.VACATION_STATUS_TEXT }}

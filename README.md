@@ -33,7 +33,7 @@ Invite `@KPML Sheriff` to the private candidate channel:
 /invite @KPML Sheriff
 ```
 
-The bot must also be a member of the private announcement channel. During testing, `#kpml-sheriff-candidates` can serve as both the candidate and announcement channel.
+The bot must also be a member of the private announcement channel. The candidate and announcement channels are independent and normally have different channel IDs.
 
 ## GitHub Setup
 
@@ -47,18 +47,18 @@ Create these variables:
 
 | Name | Required | Test value |
 | --- | --- | --- |
-| `SLACK_SOURCE_CHANNEL_ID` | Yes | ID of `#kpml-sheriff-candidates` |
-| `SLACK_CHANNEL_ID` | Yes | The same `#kpml-sheriff-candidates` ID |
+| `SLACK_SOURCE_CHANNEL_ID` | Yes | ID of `#kpml-sheriff-candidates`, used to read candidates |
+| `SLACK_CHANNEL_ID` | Yes | ID of `#kpml-offtopic`, used to publish announcements |
 | `SHERIFF_RESPONSIBILITIES_URL` | Yes | Notion responsibilities page URL |
 | `ROTATION_TIME_ZONE` | No | `Europe/Madrid` (default: `UTC`) |
 | `VACATION_STATUS_EMOJIS` | No | `:palm_tree:,:airplane:` |
 | `VACATION_STATUS_TEXT` | No | `vacation,holiday,out of office,ooo,pto` |
 
-Channel IDs begin with `C`. Open the details for `#kpml-sheriff-candidates` and copy its channel ID. To test using one channel, configure:
+Channel IDs begin with `C`. Open each channel's details and copy its channel ID. Configure the candidate and announcement channels separately:
 
 ```text
 SLACK_SOURCE_CHANNEL_ID=C0123456789
-SLACK_CHANNEL_ID=C0123456789
+SLACK_CHANNEL_ID=C9876543210
 SHERIFF_RESPONSIBILITIES_URL=https://www.notion.so/...
 ```
 
@@ -74,11 +74,9 @@ In **Settings > Actions > General > Workflow permissions**, select **Read and wr
 4. Open **Actions > Rotate sheriff**.
 5. Select **Run workflow**.
 
-The test message will appear in `#kpml-sheriff-candidates`. When you are ready to announce in `#kpml-offtopic`, invite the bot to that private channel and change only `SLACK_CHANNEL_ID` to the ID of `#kpml-offtopic`.
+The bot reads candidates from `#kpml-sheriff-candidates` and posts the message in `#kpml-offtopic`. It must be invited to both private channels.
 
-The workflow is temporarily configured to run every five minutes and allows repeated assignments within the same week through `ALLOW_REPEAT_WITHIN_WEEK=true`. GitHub may delay scheduled runs by several minutes.
-
-For production, change the cron expression in `.github/workflows/rotate-sheriff.yml` to a weekly schedule, such as `0 9 * * 1` for Mondays at 09:00 UTC, and remove `ALLOW_REPEAT_WITHIN_WEEK`. `ROTATION_TIME_ZONE` determines the local week used to prevent duplicate assignments.
+The workflow runs every Monday at 09:00 UTC. GitHub may delay scheduled runs by several minutes. `ROTATION_TIME_ZONE` determines the local week used to prevent duplicate assignments.
 
 ## Local Development
 
@@ -94,15 +92,14 @@ For a live local run, export the required environment variables before starting 
 ```sh
 export SLACK_TOKEN="xoxb-your-token"
 export SLACK_SOURCE_CHANNEL_ID="C0123456789"
-export SLACK_CHANNEL_ID="C0123456789"
+export SLACK_CHANNEL_ID="C9876543210"
 export SHERIFF_RESPONSIBILITIES_URL="https://www.notion.so/..."
 export ROTATION_TIME_ZONE="Europe/Madrid"
-export ALLOW_REPEAT_WITHIN_WEEK="true"
 ```
 
-`SLACK_SOURCE_CHANNEL_ID` and `SLACK_CHANNEL_ID` must contain Slack channel IDs, not channel names. During testing, both can use the ID of `#kpml-sheriff-candidates`.
+`SLACK_SOURCE_CHANNEL_ID` and `SLACK_CHANNEL_ID` must contain Slack channel IDs, not channel names. They do not need to match: the source channel defines the candidates, while the other channel receives the announcements.
 
-`ALLOW_REPEAT_WITHIN_WEEK=true` allows every local execution to select the next sheriff. Omit it in production to prevent more than one assignment per week.
+To run repeated local tests within the same week, additionally export `ALLOW_REPEAT_WITHIN_WEEK=true`. Do not set it in production.
 
 Then run:
 
