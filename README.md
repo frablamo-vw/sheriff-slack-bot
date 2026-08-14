@@ -72,9 +72,11 @@ In **Settings > Actions > General > Workflow permissions**, select **Read and wr
 2. Reinstall the app if you recently changed its scopes.
 3. Configure the GitHub secret and variables listed above.
 4. Open **Actions > Rotate sheriff**.
-5. Select **Run workflow**.
+5. Select **Run workflow** and leave **Force rotation** enabled.
 
 The bot reads candidates from `#kpml-sheriff-candidates` and posts the message in `#kpml-offtopic`. It must be invited to both private channels.
+
+Manual runs enable **Force rotation** by default, allowing a test even when a sheriff was already assigned during the current week. Scheduled runs do not force rotation and remain limited to one assignment per week.
 
 The workflow runs every Monday at 09:00 UTC. GitHub may delay scheduled runs by several minutes. `ROTATION_TIME_ZONE` determines the local week used to prevent duplicate assignments.
 
