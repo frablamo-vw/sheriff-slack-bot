@@ -1,0 +1,17 @@
+{
+  "name": "sheriff-slack-bot",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Rotate a Slack sheriff user group while deferring people on vacation.",
+  "type": "module",
+  "scripts": {
+    "start": "node src/index.js",
+    "test": "node --test"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "dependencies": {
+    "@slack/web-api": "^7.10.0"
+  }
+}

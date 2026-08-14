@@ -1,0 +1,51 @@
+name: Rotate sheriff
+
+on:
+  schedule:
+    # Test schedule: run every five minutes.
+    - cron: "*/5 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: sheriff-rotation
+  cancel-in-progress: false
+
+jobs:
+  rotate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+      - run: npm test
+      - run: npm start
+        env:
+          SLACK_TOKEN: ${{ secrets.SLACK_TOKEN }}
+          SLACK_SOURCE_CHANNEL_ID: ${{ vars.SLACK_SOURCE_CHANNEL_ID }}
+          SLACK_CHANNEL_ID: ${{ vars.SLACK_CHANNEL_ID }}
+          SHERIFF_RESPONSIBILITIES_URL: ${{ vars.SHERIFF_RESPONSIBILITIES_URL }}
+          ALLOW_REPEAT_WITHIN_WEEK: "true"
+          ROTATION_TIME_ZONE: ${{ vars.ROTATION_TIME_ZONE }}
+          VACATION_STATUS_EMOJIS: ${{ vars.VACATION_STATUS_EMOJIS }}
+          VACATION_STATUS_TEXT: ${{ vars.VACATION_STATUS_TEXT }}
+
+      - name: Persist rotation state
+        run: |
+          if git diff --quiet -- data/rotation.json; then
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/rotation.json
+          git commit -m "chore: update sheriff rotation state"
+          git push
