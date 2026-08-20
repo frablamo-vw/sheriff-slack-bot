@@ -2,8 +2,8 @@ name: Rotate sheriff
 
 on:
   schedule:
-    # Run every Monday at 09:00 UTC.
-    - cron: "0 9 * * 1"
+    # Run every Thursday at 10:00 Europe/Madrid (08:00 UTC).
+    - cron: "0 8 * * 4"
   workflow_dispatch:
     inputs:
       force:
