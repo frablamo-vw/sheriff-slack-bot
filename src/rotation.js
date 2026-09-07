@@ -1,3 +1,12 @@
+export function parseMarkerList(rawValue, fallback = "") {
+  return new Set(
+    (rawValue?.trim() || fallback)
+      .split(",")
+      .map((value) => value.trim().toLowerCase())
+      .filter(Boolean),
+  );
+}
+
 export function reconcileQueue(queue, members) {
   const memberSet = new Set(members);
   const reconciled = queue.filter((user) => memberSet.has(user));

@@ -51,8 +51,8 @@ Create these variables:
 | `SLACK_CHANNEL_ID` | Yes | ID of `#kpml-offtopic`, used to publish announcements |
 | `SHERIFF_RESPONSIBILITIES_URL` | Yes | Notion responsibilities page URL |
 | `ROTATION_TIME_ZONE` | No | `Europe/Madrid` (default: `UTC`) |
-| `VACATION_STATUS_EMOJIS` | No | `:palm_tree:,:airplane:` |
-| `VACATION_STATUS_TEXT` | No | `vacation,holiday,out of office,ooo,pto` |
+| `VACATION_STATUS_EMOJIS` | No | `:palm_tree:,:airplane:` (default: `:palm_tree:,:beach_with_umbrella:,:desert_island:,:airplane:`) |
+| `VACATION_STATUS_TEXT` | No | `vacation,holiday,out of office,ooo,pto` (default: same list) |
 
 Channel IDs begin with `C`. Open each channel's details and copy its channel ID. Configure the candidate and announcement channels separately:
 
@@ -62,7 +62,7 @@ SLACK_CHANNEL_ID=C9876543210
 SHERIFF_RESPONSIBILITIES_URL=https://www.notion.so/...
 ```
 
-Vacation markers are comma-separated and case-insensitive. Expired Slack statuses are ignored, and text markers can appear anywhere in the status text.
+Vacation markers are comma-separated and case-insensitive. Expired Slack statuses are ignored, and text markers can appear anywhere in the status text. Leaving a marker variable unset or empty falls back to the built-in defaults, and each run logs the active markers plus the detected status of every candidate.
 
 In **Settings > Actions > General > Workflow permissions**, select **Read and write permissions**. The workflow persists the new queue by committing `data/rotation.json`, so branch protection rules must permit that commit.
 
@@ -76,9 +76,9 @@ In **Settings > Actions > General > Workflow permissions**, select **Read and wr
 
 The bot reads candidates from `#kpml-sheriff-candidates` and posts the message in `#kpml-offtopic`. It must be invited to both private channels.
 
-Manual runs enable **Force rotation** by default, allowing a test even when a sheriff was already assigned during the current week. Scheduled runs do not force rotation and remain limited to one assignment per week.
+Manual runs enable **Force rotation** by default, allowing a test even when a sheriff was already assigned during the current week. Scheduled runs also force rotation so that every scheduled execution assigns a new sheriff.
 
-The workflow runs every Monday at 09:00 UTC. GitHub may delay scheduled runs by several minutes. `ROTATION_TIME_ZONE` determines the local week used to prevent duplicate assignments.
+The workflow runs every Monday at 10:00 `Europe/Madrid` (`08:00` UTC). GitHub may delay scheduled runs by several minutes. Because cron schedules are always evaluated in UTC, the local time shifts to 09:00 when Spain switches to CET in late October; update the cron to `0 9 * * 1` to keep the 10:00 local slot. `ROTATION_TIME_ZONE` determines the local week used to prevent duplicate assignments.
 
 ## Local Development
 

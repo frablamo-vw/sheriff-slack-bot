@@ -1,6 +1,13 @@
 import { readFile, writeFile } from "node:fs/promises";
 import { WebClient } from "@slack/web-api";
-import { eligibleMembers, isOnVacation, reconcileQueue, rotate, rotationWeek } from "./rotation.js";
+import {
+  eligibleMembers,
+  isOnVacation,
+  parseMarkerList,
+  reconcileQueue,
+  rotate,
+  rotationWeek,
+} from "./rotation.js";
 
 const STATE_PATH = new URL("../data/rotation.json", import.meta.url);
 
@@ -11,12 +18,7 @@ function requiredEnvironment(name) {
 }
 
 function commaSeparated(name, fallback = "") {
-  return new Set(
-    (process.env[name] ?? fallback)
-      .split(",")
-      .map((value) => value.trim().toLowerCase())
-      .filter(Boolean),
-  );
+  return parseMarkerList(process.env[name], fallback);
 }
 
 async function readState() {
@@ -56,7 +58,10 @@ async function main() {
     responsibilitiesUrl: requiredEnvironment("SHERIFF_RESPONSIBILITIES_URL"),
     timeZone: process.env.ROTATION_TIME_ZONE?.trim() || "UTC",
     markers: {
-      emojis: commaSeparated("VACATION_STATUS_EMOJIS", ":palm_tree:"),
+      emojis: commaSeparated(
+        "VACATION_STATUS_EMOJIS",
+        ":palm_tree:,:beach_with_umbrella:,:desert_island:,:airplane:",
+      ),
       text: commaSeparated("VACATION_STATUS_TEXT", "vacation,holiday,out of office,ooo,pto"),
     },
   };
@@ -82,6 +87,15 @@ async function main() {
   const unavailable = new Set(
     queue.filter((user) => isOnVacation(usersById.get(user)?.profile ?? {}, config.markers)),
   );
+
+  console.log(`Vacation emoji markers: ${[...config.markers.emojis].join(", ") || "(none)"}`);
+  console.log(`Vacation text markers: ${[...config.markers.text].join(", ") || "(none)"}`);
+  for (const user of queue) {
+    const profile = usersById.get(user)?.profile ?? {};
+    const status = `${profile.status_emoji || "-"} ${profile.status_text || "-"}`.trim();
+    console.log(`  ${unavailable.has(user) ? "[vacation]" : "[available]"} ${user} status: ${status}`);
+  }
+
   const result = rotate(queue, unavailable);
 
   if (!result.selected) {

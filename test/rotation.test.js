@@ -1,6 +1,13 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { eligibleMembers, isOnVacation, reconcileQueue, rotate, rotationWeek } from "../src/rotation.js";
+import {
+  eligibleMembers,
+  isOnVacation,
+  parseMarkerList,
+  reconcileQueue,
+  rotate,
+  rotationWeek,
+} from "../src/rotation.js";
 
 test("selects the queue head and moves them to the end", () => {
   assert.deepEqual(rotate(["A", "B", "C"], new Set()), {
@@ -72,4 +79,34 @@ test("calculates ISO weeks in the configured timezone", () => {
 
   assert.equal(rotationWeek(instant, "UTC"), "2026-W02");
   assert.equal(rotationWeek(instant, "America/Los_Angeles"), "2026-W01");
+});
+
+test("falls back to defaults when the marker variable is empty or missing", () => {
+  const fallback = ":palm_tree:,:airplane:";
+
+  // GitHub Actions renders an undefined repository variable as an empty string,
+  // which previously bypassed the fallback and disabled vacation detection.
+  assert.deepEqual(parseMarkerList("", fallback), new Set([":palm_tree:", ":airplane:"]));
+  assert.deepEqual(parseMarkerList("   ", fallback), new Set([":palm_tree:", ":airplane:"]));
+  assert.deepEqual(parseMarkerList(undefined, fallback), new Set([":palm_tree:", ":airplane:"]));
+  assert.deepEqual(parseMarkerList(null, fallback), new Set([":palm_tree:", ":airplane:"]));
+});
+
+test("normalizes and overrides marker values when provided", () => {
+  assert.deepEqual(
+    parseMarkerList(" :PALM_TREE: , :Airplane: ", ":ignored:"),
+    new Set([":palm_tree:", ":airplane:"]),
+  );
+  assert.deepEqual(parseMarkerList(":palm_tree:,,  ,:airplane:"), new Set([":palm_tree:", ":airplane:"]));
+  assert.deepEqual(parseMarkerList(""), new Set());
+});
+
+test("detects vacation using the parsed default markers", () => {
+  const markers = {
+    emojis: parseMarkerList("", ":palm_tree:,:beach_with_umbrella:"),
+    text: parseMarkerList("", "vacation,ooo"),
+  };
+
+  assert.equal(isOnVacation({ status_emoji: ":palm_tree:", status_text: "" }, markers, 100), true);
+  assert.equal(isOnVacation({ status_emoji: ":coffee:", status_text: "" }, markers, 100), false);
 });
