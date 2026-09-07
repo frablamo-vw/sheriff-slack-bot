@@ -78,7 +78,9 @@ The bot reads candidates from `#kpml-sheriff-candidates` and posts the message i
 
 Manual runs enable **Force rotation** by default, allowing a test even when a sheriff was already assigned during the current week. Scheduled runs also force rotation so that every scheduled execution assigns a new sheriff.
 
-The workflow runs every Monday at 10:00 `Europe/Madrid` (`08:00` UTC). GitHub may delay scheduled runs by several minutes. Because cron schedules are always evaluated in UTC, the local time shifts to 09:00 when Spain switches to CET in late October; update the cron to `0 9 * * 1` to keep the 10:00 local slot. `ROTATION_TIME_ZONE` determines the local week used to prevent duplicate assignments.
+The workflow runs every Monday at 08:00 `Europe/Madrid` (`06:00` UTC). GitHub may delay scheduled runs by several minutes, and delays of a few hours have been observed. Because cron schedules are always evaluated in UTC, the local time shifts to 07:00 when Spain switches to CET in late October; update the cron to `0 7 * * 1` to keep the 08:00 local slot. `ROTATION_TIME_ZONE` determines the local week used to prevent duplicate assignments.
+
+Changing the cron does not take effect immediately. GitHub needs time to register a modified schedule, so the first run after the change is usually skipped when the new time is less than a few hours away. Push schedule changes well in advance of the intended slot.
 
 ## Local Development
 
